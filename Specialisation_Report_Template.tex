@@ -1,0 +1,149 @@
+\newcommand{\comment}[1]{}
+
+%\documentclass[a4paper,twocolumn,12pt]{article}
+
+%\documentclass[a4wide,12pt]{report}
+
+%\documentclass[a4wide,12pt]{article}
+%\documentclass[informasjonssikkerhet]{gucmasterproject}
+\documentclass[informationsecurity]{gucmasterproject}
+%documentclass[gjovik]{gucmasterproject}
+
+%\usepackage{pslatex} %% Doesn't seem to work - i.e. convert .eps to .pdf
+ 
+\usepackage[utf8]{inputenc}     % For utf8 encoded .tex files
+%\usepackage[latin1]{inputenc}
+\usepackage[british]{babel}     % For chapter headings etc.
+%\usepackage[pdftex]{graphicx}           % For inclusion of graphics
+
+%From http://math.uib.no/it/tips/
+   %% For grafikk
+    \usepackage{ifpdf}
+    \ifpdf
+      \usepackage[pdftex]{graphicx}
+      \usepackage{epstopdf}
+    \else
+      \usepackage[dvips]{graphicx}
+    \fi
+    %% Her kan du putte dine vanlige pakker og definisjoner
+
+
+
+%\usepackage[dvips]{hyperref}    % For cross references in pdf
+\usepackage{hyperref}
+\usepackage{mdwlist}
+\usepackage{url}
+\usepackage{here}
+
+\def\UrlFont{\tt}
+
+\begin{document}
+
+\thesistitle{Specialaization Report:\\ The Lightning Network}
+\thesisauthor{Jardar Ton \\
+jardart@stud.ntnu.no}
+\thesisdate{\gucmasterthesisdate}
+\useyear{2017}
+\makefrontpages % make the frontpages
+%\thesistitlepage % make the ordinary titlepage
+
+
+\comment{
+Front page - including
+"   NTNU technical report front page including logos etc.
+"   The text: "Specialization Report"
+"   Title of project
+"   Name of author and contact details
+"   Date
+"   Version
+
+email address
+"   MIS students must include "NISlab" as their affiliation.
+Date:22.10.2003
+
+Structure of Specialization Report
+NTNU Gj\o{}ovik
+}
+
+
+\chapter*{Revision history}
+
+\begin{center}
+\begin{tabular}[H]{|l|p{35em}|}
+\hline
+Version \#  & Description of change (why, what where - a few sentences)\\
+\hline
+      0.1   & First version made available via Fronter\\
+\hline
+      0.2   & Corrected some spelling mistakes and added 'control questions' to Abstract, chapter 1 and 2\\
+\hline
+      0.2.1   & Removed the reference to a dead link in chapter 1 (keywords).\\
+\hline
+      0.2.1   & Replaced HIG logo by NTNU logo (just in case it is not done!) and removed references to information security\\
+	\hline
+\end{tabular}
+\end{center}
+\newpage
+
+\begin{abstract}
+
+
+\end{abstract}
+
+
+\tableofcontents
+
+%\chapter{Contents of the project description}
+%The project description must use the gucmasterproject class file and contain the following elements/chapters:
+
+
+\chapter{Introduction}
+
+\cite{poon2015bitcoin}
+\cite{antonopoulos2017mastering}
+
+\section{Bitcoin Basics}
+
+\section{Scaling Problems}
+The basic idea is that two parities can exchange founds several times and only tell the rest of the Bitcoin network the final result.
+When a exchange happens a new transaction with the current balance is created, but they defer telling the rest of the Bitcoin network about the transaction-i.e., the transaction being included in the blockchain. The rest of the network will only get the most recent and updated transaction in the channel when one of the parties finally publishes it and it's included in the blockchain. This means that many payments can take place without encumbering the blockhain and therefore achieving better scalability.
+
+\chapter{Payment Channels}
+
+One of the core elements of the lighting network design is payment channels which allow two parties to exchange founds between each other.
+It is inside these that the balance between the parties in the channel are agreed on and updated.
+This total amount of value in the channels are decided when the channel is created, and distributed to the parties according to the balance when something is published to the blockchain.
+
+\section{Channel Creation}
+The mechanisms for doing exchanges in the channel are simple themselves but there are many problems that arise when doing transactions off-chain.
+A payment channel between Alice and Bob uses 2of2 multisignature bitcoin transactions. A multisignature transaction means that multiple keys are required to spend output from a transaction. A 2of2 multisignature means that 2 keys of a potential 2 keys are required in this case-i.e., both Alice and Bob needs to use their keys. This ensures that both sides need to agree on transactions done with the coins in the channel. Without it, one of them could just create a new transaction spending all founds in the channel, publish it to the blockchain, and thereby stealing from the other.
+
+To exchange founds in a channel one first needs to create whats called a "founding transaction". It's purpose is to create a common starting point for creation of new transactions in the channel. The input value of the founding transaction can come from one or both of the parties in the channel, but the output will have a 2of2 multisignature condition. Then a new transaction spending the output of the founding transaction is created which refund the input value of the founding transactions back to its original owner. At this point no signatures for either the founding or refund-transaction has been exchanged. This is done in a specific order where first the refund transaction is signed by both sides, and only then are signatures exchanged for the founding transaction. The reason for this is to avoid the founds being stuck in the founding transaction because of the multisignature condition on its output. If the founding transaction where published without or before a refund transaction was created, either Alice or Bob could render the founds unusable by not co-operating. After the signatures for the founding transactions has been exchanged it is published to the blockchain. The founding transaction starting point is now established; containing the total value available in the channel and allowing for refunds by either party by publishing the refund transaction.
+
+\section{Channel operation}
+
+The transactions describing the balance between Alice and Bob are called commitment transactions. They are all created from the output of the founding transaction just as the refund transaction was. 
+
+\section{Spesification and Implementation}
+SIGHASH NOINPUT
+BOLT 
+LND
+.
+.
+
+
+
+%\chapter{Project description evaluation criteria}
+
+
+\bibliographystyle{plain}
+%\bibliographystyle{gucmasterthesis}
+\bibliography{imt4441}
+
+
+
+\end{document}
+
+
+IEEE computer society keywords
+http://www.computer.org/portal/site/ieeecs/menuitem.c5efb9b8ade9096b8a9ca0108bcd45f3/index.jsp?&pName=ieeecs_level1&path=ieeecs/publications/author/keywords&file=ACMtaxonomy.xml&xsl=generic.xsl&
