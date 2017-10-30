@@ -86,7 +86,8 @@ Version \#  & Description of change (why, what where - a few sentences)\\
 \newpage
 
 \begin{abstract}
-
+The lightning network consists of networked payment channels which are able to do Bitcoin transactions off-chain\cite{poon2015bitcoin}.
+This will decrease the total amount of transactions that needs to be spread through the bitcoin network and the amount thats included in the blockchain; giving Bitcoin much greater scalability.
 
 \end{abstract}
 
@@ -99,36 +100,112 @@ Version \#  & Description of change (why, what where - a few sentences)\\
 
 \chapter{Introduction}
 
-\cite{poon2015bitcoin}
-\cite{antonopoulos2017mastering}
+The lightning network builds on and improves the Bitcoin cryptocurrency technology. 
+Since the first proposal of the Bitcoin technology in 2008\cite{nakamoto2008bitcoin} has the system and its technology been under constant development. It's popularity has spawned many alternate cryptocurrencies, but most relying on the same technology as Bitcoin. The Bitcoin network is a decentralized peer-to-peer network where every node has a copy of the distributed ledger called the blockchain. It contains information about every transaction done. No central authority need to verify new transactions; Cryptography and the distributed ledger makes the nodes in the network able to do so on their own.
 
-\section{Bitcoin Basics}
+\section{Transactions}
+A transaction is what the name implies a transfer of money or value from one person to another. The book Mastering Bitcoin: Programming the Open Blockchain \cite{antonopoulos2017mastering} contains a detailed explanation of transactions which will be used for this section. Bitcoin is often explained in terms of actions or concepts such as addresses, wallets, senders and receivers, but these things are not really needed to explain Bitcoin transactions at its core. Transactions have two important elements: output and input. The input of a transaction is always the output of one or more other transactions. The output of a transaction can only be the input of one other transaction-i.e., a transaction output can only be spent once. There are two categories of transaction outputs: spent and unspent. The unspent transaction outputs are called UTXO, which the Bitcoin network keep track of. The UTXO require a cryptographic key to be used as input (spent), this requirement is placed by the creator of the transaction (previous spender). Bitcoins are "transferred" when Alice takes an UTXO she has the key to spend, creates a new transaction witch has the UTXO as input, has the same value as output but requires the private key of Bob to spend. This transaction is spread trough the network and since all UTXO is kept track of Bob can detect that he has the key to spend this UTXO.
+
+\paragraph{}
+The total output of a transaction must equal its total input. Similarly one whole UTXO must must be used as an input for a new transaction.
+The flexibility comes from the possibility to have many inputs and outputs for one transaction.
+Lets say Alice wishes to send Bob 5 coins, but she only has a 10 coin UTXO available. What she would do is to create a new transaction with the 10 coins as input, but having two outputs; One with 5 coins to herself and one with 5 coins to Bob.
+This means that one can effectively split input values into smaller units. Several outputs can also be combined into one output by having many inputs and one output. 
+This system of outputs being inputs in new transactions as shown in fig.\ref{fig:ln_trans} makes it possible to track a transaction output value by following this input output pattern in old transactions. The problem is that this investigation most likely will not be a single chain back to when the coins was created, but will show that the value has been split and mixed with other many times.
+
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=10cm]{LN_Trans.png}
+    \caption{Visualization of transactions inputs and outputs. We can see the method of splitting founds by taking one input and splitting it out over many outputs. Similarly one can take many inputs from different transactions and combine them into one output.}
+    \label{fig:ln_trans}
+\end{figure}
+
+\section{Blockchain}
+The blockchain is the distributed data structure that stores all the transactions created. The same book Mastering Bitcoin: Programming the Open Blockchain \cite{antonopoulos2017mastering} also covers blocks and the blockchain well so it will be used as the source for this section as well. The structure consists of blocks where the transactions are stored and a reference to the previous block. This reference to the previous block is what makes it a chain as shown in fig.\ref{fig:blockchain} because we can follow the trail back to the genesis (first) block. The reference is the hash of the previous block and is stored in the header of the blocks. This header also contains among other things a timestamp, a merkle tree root, and a nonce. In addition to the headers the blocks contain many transactions.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=10cm]{blockchain.png}
+    \caption{A part of the blockchain visualized. Each block contains a reference to the preceeding one.}
+    \label{fig:blockchain}
+\end{figure}
+
+
+\paragraph{}
+The merkle tree root in the header is a reference to the start of the a data structure in the block. The Merkle tree data structure is a binary tree, meaning each node at most has two children. It is used to summarize the transactions contained in the block; Making it effective to check if a transaction is included in the block or not. This type of structure is generated from the bottom up meaning the leaf nodes are created first. The transactions are all individually hashed and the resulting hashes are the leaf nodes. Then all the leaf nodes are hashed again in pairs of two and the result will be the parent node of the ones combined. This process of pairing two nodes together and hashing them to form their parent is done until there is only node left which will be the root of the tree. If a hash is the summary of its input then we can see how the root node would be the summary of all transactions in the block.
+
+\paragraph{}
+The timestamp in the header of the blocks tells us when a block was created. The creation process is called mining and consists of hashing the the newly created block header again and again while changing the nonce each time. The goal is to find a output of the hash function that starts with a specific number of zero's. Finding the nonce which gives this hash is very hard and requires a lot of computing power but verifying it once it has been found is very fast. Using all this computing power is called proof-of-work and is what gives the network its ability to have consensus about what transactions that have taken place. The blockchain can be considered one version of events or transactions that has taken place. This means that there could be several blockchains, each having a different version of what has transpired. The bitcoin network accepts the chain with the most amount of blocks in them as the valid one. This is because this chain will have the greatest amount of cpu-work invested in it, meaning to alter the events recorded in the blockhain the cpu-work needs to be redone creating a altered blockcain; It also needs to be performed so fast that the new chain becomes longer than the real one, thereby having the network accpenting the altered as the valid one.
+Malicious actors would then need to have a more cpu-power than the rest of the network to influence the consensus.
+
+
 
 \section{Scaling Problems}
-The basic idea is that two parities can exchange founds several times and only tell the rest of the Bitcoin network the final result.
-When a exchange happens a new transaction with the current balance is created, but they defer telling the rest of the Bitcoin network about the transaction-i.e., the transaction being included in the blockchain. The rest of the network will only get the most recent and updated transaction in the channel when one of the parties finally publishes it and it's included in the blockchain. This means that many payments can take place without encumbering the blockhain and therefore achieving better scalability.
+
+One problem that has emerged with the popularity of Bitcon is its capability to scale well.
+A paper called "On scaling decentralized blockchains"\cite{croman2016scaling} describes this problem clearly.
+In the paper they define throughput as how many transactions that can be done each second, and latency is how long is takes for a transaction to be verified. Latency is influenced by the block creation interval, and throughput is influenced by two things: the size of the blocks and how often they are created. Having larger blocks means more transactions can be placed in each, and creating blocks faster will also make transactions be verified faster. While giving better throughput right now these solutions does not scale well. Blocks need time to propagate through the network; therefore large blocks created very often will cause problems. The paper does some observations about the limits of these two factors: with a 10 minute block creation interval, the blocks size should not be over 4MB; to reduce the latency the block creation interval needs to be reduced and therefore also the size, so for 80KB blocks the interval should not be less than 12 seconds.
+
+\paragraph{}
+One must also consider the size of the blockchain. At the time of writing this paper (October 2017) this is at about 138.000 MB or 134 GB \cite{blockchain_size}. While the storage capabilities on modern computers can accommodate this, the size of the blockchain in the future may cause users with standard consumer computer setup to not want to store the full blockchain because of the storage space requirements. Bitcoin users who have a updated copy of the blockchain run what is called a full node. SPV or simple payment verification nodes are a alternative that does not store the data, but asks full nodes for data when required. The storage requirement may cause many users to switch from a full node to a SPV node. 
+
+\paragraph{}
+The lightning network is a solution to the scalability problems facing Bitcoin\cite{poon2015bitcoin}.
+In the paper they warn that trying to scale the current system will lead to an extreme centralization in the bitcoin network.
+Having very large blocks, extreme difficulty mining, and a blockchain that has grown beyond a single hard disk will mean only people who can afford it, have the knowledge, and specialized equipment will be able to perform these tasks which where meant to be decentralized. The rest of the users will simply have to trust these central entities and the whole point of the bitcoin technology is lost.
+
+\paragraph{}
+The basic idea of the lightning network is that two parities can exchange founds several times, and later only tell the rest of the Bitcoin network the final result.
+When a exchange happens a new transaction with the current balance is created, but they defer telling the rest of the Bitcoin network about the transaction-i.e., the transaction being included in the blockchain. This means more exchanges can be done and the balance simply updated.
+When one of the parties finally publishes it to the rest of the network it will be included in the blockchain and verified. Only one transaction needs to be published for the many that happened in private between the parties. These transactions happening without the blockchain knowing is why these are called off-chain transactions. This will reduce the amount of transactions needed to be published and therefore allow for more users and more transactions. But since many of those are off-chain it will not impact the bitcoin network.
 
 \chapter{Payment Channels}
 
 One of the core elements of the lighting network design is payment channels which allow two parties to exchange founds between each other.
 It is inside these that the balance between the parties in the channel are agreed on and updated.
-This total amount of value in the channels are decided when the channel is created, and distributed to the parties according to the balance when something is published to the blockchain.
+The total amount of value in the channels is decided when the channel is created, and distributed to the parties according to the balance when something is published to the blockchain.
 
 \section{Channel Creation}
 The mechanisms for doing exchanges in the channel are simple themselves but there are many problems that arise when doing transactions off-chain.
 A payment channel between Alice and Bob uses 2of2 multisignature bitcoin transactions. A multisignature transaction means that multiple keys are required to spend output from a transaction. A 2of2 multisignature means that 2 keys of a potential 2 keys are required in this case-i.e., both Alice and Bob needs to use their keys. This ensures that both sides need to agree on transactions done with the coins in the channel. Without it, one of them could just create a new transaction spending all founds in the channel, publish it to the blockchain, and thereby stealing from the other.
 
-To exchange founds in a channel one first needs to create whats called a "founding transaction". It's purpose is to create a common starting point for creation of new transactions in the channel. The input value of the founding transaction can come from one or both of the parties in the channel, but the output will have a 2of2 multisignature condition. Then a new transaction spending the output of the founding transaction is created which refund the input value of the founding transactions back to its original owner. At this point no signatures for either the founding or refund-transaction has been exchanged. This is done in a specific order where first the refund transaction is signed by both sides, and only then are signatures exchanged for the founding transaction. The reason for this is to avoid the founds being stuck in the founding transaction because of the multisignature condition on its output. If the founding transaction where published without or before a refund transaction was created, either Alice or Bob could render the founds unusable by not co-operating. After the signatures for the founding transactions has been exchanged it is published to the blockchain. The founding transaction starting point is now established; containing the total value available in the channel and allowing for refunds by either party by publishing the refund transaction.
+\paragraph{}
+To exchange founds in a channel one first needs to create whats called a "founding transaction". It's purpose is to create a common starting point for creation of new transactions in the channel. The input value of the founding transaction can come from one or both of the parties in the channel, but the output will have a 2of2 multisignature condition. Then a new transaction spending the output of the founding transaction is created which refund the input value of the founding transactions back to its original owner, also with a mutlisignature condition on it's output. At this point no signatures for either the founding or refund-transaction has been exchanged. This is done in a specific order where first the refund transaction is signed by both sides, and only then are signatures exchanged for the founding transaction. The reason for this is to avoid the founds being stuck in the founding transaction because of the multisignature condition on its output. If the founding transaction where published without or before a refund transaction was created, either Alice or Bob could render the founds unusable by not co-operating. After the signatures for the founding transactions has been exchanged it is published to the blockchain. The founding transaction starting point is now established; containing the total value available in the channel and allowing for refunds by either party by publishing the refund transaction.
 
 \section{Channel operation}
 
-The transactions describing the balance between Alice and Bob are called commitment transactions. They are all created from the output of the founding transaction just as the refund transaction was. 
+The transactions describing the balance between Alice and Bob are called commitment transactions. Balance in the context of payment channels is how the total value of the channel will be split between the parties-e.g., if the total value of the channel is 10 coins and the balance is 5 to Alice and 5 to Bob; Alice decides to send Bob 1 coin; now the balance is 4 coins to Alice and 6 to Bob. This is shown in fig.\ref{fig:ln_commit} where we see the first commitment transaction on the left and the new on the right.
 
-\section{Spesification and Implementation}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=12cm]{ln_commit.png}
+    \caption{The founding transaction is colored green to show it has been published to the blockchain. It has two commitment transactions. The leftmost is the original and the right shows the balance after Alice sends Bob 1 coin. Source: \cite{poon2015bitcoin}}
+    \label{fig:ln_commit}
+\end{figure}
+
+The commitment transactions are all created from the output of the founding transaction just as the refund transaction was. The balance in the channel is described in the output data of these transactions, so these transactions takes the total value of the channel in the form of the output of the founding transaction and splits it between the parties in it's own output parameters. The refund transaction can be said to be the first commitment transaction since it describes the initial balance in the channel. This is the total value that was decided by the founding transaction, and the initial balance will be whatever each party contributed to the input of this. When the balance in the channel needs to be updated a new commitment transaction is created spending the output of the founding transaction again. The exchanging of founds between Alice and Bob consists of them creating new commitment transactions each time an exchange is done, which represents the new balance between the two. Alice and Bob exchanges signatures for each newly created commitment transaction to satisfy the multisgnature condition, which enables any one of them can publish it to the blockchain at any time they wish. A transaction output can only be spent once, so when a commitment transaction is published the founding transaction is spent, and all other commitment transactions created are useless. This means that the channel no longer has any uses, because its value or founding transaction is spent. So channels are closed out by publishing a commitment transaction. Therefore, to be able to do many exchanges between the sides in the channel the commitment transactions should not be published immediately. Only when something goes wrong, or both/one of the parties wishes the channel to close should the newest commitment transaction representing the current balance be published to the blockchain. 
+
+\section{Trust and Revocation}
+
+The payment channels should not require the parties to trust each other to be able to do exchanges between themselves.
+As described earlier there are mechanisms that ensures co-operation such as multisignature addresses; makes malicious behaviour impossible such as rendering the founds unreachable with refund transaction in place. A mechanism is needed to solve the big problem of making sure only the newest commitment transaction which has the correct balance is published to the blockcain. Using the earlier example where a channel between Alice and Bob had the value of 10 coins and the balance was 5 to each. If Alice Does several payments to Bob and the balance ends up being 0 to Alice 10 to Bob, she could publish the commitment transaction where the balance was 5 to each and get all her money back. To deal with this problem it is proposed to penalize anyone who publishes any other commitment transaction than the latest. The penalty is that whoever published the old commitment transaction will loose all the founds the other person in the channel.
+In order to punish the party who published an old commitment transaction it must be clear which one did it; known as the problem of ascribing blame. When the two parties exchanges signatures for a commitment transaction we end up with two different transactions. Bob signs one and sends it to Alice, and Alice signs one and sends it to Bob. This means both sides ends up with a half signed transaction which only needs their own signature before it is published to the blockchain. The multisignature requirement for commitment transactions means that each side can only publish the one they received from the other.
+E.g., if Bob is the one who published a transaction we can find out, because he must publish one of those he received from Alice which already had her signature.
+
+\paragraph{}
+This is solved by revoking old commitment transactions. A transaction spending their own output of old commitments are signed and sent to the opposite party as an insurance. It means that one side will be able to spend the others output of old commitment transactions. In combination with enforcing a time period where the person who publishes commitment transactions cannot spend their output is the solution. So if Bob publishes an old commitment transaction Alice can detect this and spend Bobs output before he has the ability to spend it himself because of the timeout.
+
+\paragraph{}
+The timeout of transaction outputs or Revocable Sequence Maturity Contracts (RSMC) are the first step. When looking at the problem of ascribing blame there were two half signed copies of each commitment transaction; Bob got one where Alice has signed and Alice one where Bob has signed. Both of them are could be published to the blockchain but only one will be since they both spend the same output of the founding transaction. The timeout will be placed on the party who publishes the transaction; Reason being to try and steal from the other one would publish a transaction themselves-e.g., Alice publishes a old transaction where the balance in the channel favors her. For each set of commitment transactions each of them will have a RSMC on the output giving founds to the holder of the commitment transaction. The output which gives founds to the other party is not encumbered with this timeout. 
+
+\chapter{Channels with intermediaries using HTLC}
+
+\chapter{Spesification and Implementation}
 SIGHASH NOINPUT
 BOLT 
 LND
-.
+SEGWIT??
 .
 
 
