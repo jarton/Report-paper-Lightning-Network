@@ -197,9 +197,104 @@ E.g., if Bob is the one who published a transaction we can find out, because he 
 This is solved by revoking old commitment transactions. A transaction spending their own output of old commitments are signed and sent to the opposite party as an insurance. It means that one side will be able to spend the others output of old commitment transactions. In combination with enforcing a time period where the person who publishes commitment transactions cannot spend their output is the solution. So if Bob publishes an old commitment transaction Alice can detect this and spend Bobs output before he has the ability to spend it himself because of the timeout.
 
 \paragraph{}
-The timeout of transaction outputs or Revocable Sequence Maturity Contracts (RSMC) are the first step. When looking at the problem of ascribing blame there were two half signed copies of each commitment transaction; Bob got one where Alice has signed and Alice one where Bob has signed. Both of them are could be published to the blockchain but only one will be since they both spend the same output of the founding transaction. The timeout will be placed on the party who publishes the transaction; Reason being to try and steal from the other one would publish a transaction themselves-e.g., Alice publishes a old transaction where the balance in the channel favors her. For each set of commitment transactions each of them will have a RSMC on the output giving founds to the holder of the commitment transaction. The output which gives founds to the other party is not encumbered with this timeout. 
+The timeout of transaction outputs or Revocable Sequence Maturity Contracts (RSMC) are the first step. When looking at the problem of ascribing blame there were two half signed copies of each commitment transaction; Bob got one where Alice has signed and Alice one where Bob has signed. Both of them are could be published to the blockchain but only one will, since they both spend the same output of the founding transaction. The timeout will be placed on the party who publishes the transaction; Reason being to try and steal from the other one would publish a transaction themselves-e.g., Alice publishes a old transaction where the balance in the channel favors her. For each set of commitment transactions each of them will have a RSMC on the output giving founds to the holder of the commitment transaction. The output which gives founds to the other party is not encumbered with this timeout. Fig.\ref{fig:ln_timeout} shows this structure with two sets of commitment transactions and their outputs. The timeout is enforced by confirmations of the commitment transaction. Confirmations is how deep a transaction is in the blockchain, so when a transaction is included in a block it has one confirmation, when another block is added to the chain it has two and so on\cite{antonopoulos2017mastering}. In the RSMC case it will make the person who publishes the commitment transaction unable to spend their output of that transaction until it has a set number of confirmations. In the paper they uses 1000 confirmations which will take some time when considering a 10 minute block interval.
 
-\chapter{Channels with intermediaries using HTLC}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=12cm]{ln_timeout.png}
+    \caption{Here we see a pair of commitment transactions for Alice and Bob and their outputs. Purple indicates that Alice can publish and blue shows that Bob can publish. Source: \cite{poon2015bitcoin}}
+    \label{fig:ln_timeout}
+\end{figure}
+
+The need to wait for confirmations to spend the output is something that is enforced on every set of created commitment transactions. It enables the next step that allows for old commitment transactions to be revoked. Whenever a new set of commitment transactions are created both parties sign and exchange whats called a Breach Remedy Transaction. This spends the output that is confirmation locked for that person-e.g., Alice creates a breach remedy transaction spending her output in the old commitment transaction and sends it to Bob. Now if either of the two parties publishes a old commitment transaction, they cannot spend their output at once because of the RSMC, and the other can publish the breach remedy transaction and get their output in addition to their own. The only for one of the parties to publish an old transaction and have the other party get all the funds is if the other party does not publish the breach remedy transaction in time. If enough time passes so that the commitment transaction gets enough confirmation the one who published it will be able to spend their output as long as the other party has not published the breach remedy transaction. Even so the other party still would get their output.
+
+\paragraph{}
+Lets say Alice and Bob has a channel with the value of 1 coin where they both contributed 0.5 coins each. They create a funding transaction, a refund transaction (which is really the first pair of commitment transactions paying back 0.5 coins to each), sign the refund transaction and then the founding transaction. After the funding transaction is published the channel is ready as shown in fig.\ref{fig:ln_breach}. The current commitment transaction (C1a for Alice and C1b for Bob) have their two outputs giving each 0.5 coins, one normal (D1b and D1b)   and one Revocable delivery (RD1a and RD1b) which needs confirmations to be broadcast. Then Alice sends Bob 0.1 coins. Bob creates his breach remedy (BR1b) which spends his 0.5 of the commitment transaction (C1b); this is the same 0.5 output that used in the Revocable delivery (RD1b).
+Alice does the same thing and sends it to Bob. Now that the old commitment transactions (C1a and C1b) are revoked they can create the updated pair (C2a and C2b) witch the new balance which outputs 0.4 to Alice and 0.6 to Bob. Now Bob decides to broadcast the old commitment transaction (C1b) to the blockchain. A strange decision since in the old balance he has 0.1 coins less but it's still a violation of the agreement between the parties. 
+He cannot claim Output 1 of 0.5 coins since he must wait for 1000 confirmations to do so because of the Revocable delivery (RD1b).
+Alice sees on the blockchain that an old commitment transaction has been published. She has access to output 0 of 0.5 coins at once since it was Bob who published and therefore confirmation requirement for her. She also has the breach remedy transaction Bob sent her which spends output 1 of 0.5 coins. She can publish this before Bob because he has to wait for confirmations and thereby she gets both outputs and the total value of 1 coin.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=14cm]{ln_breach.png}
+    \caption{This is what happens when an old commitment transaction is published. Green indicate that the transaction is published to the blockchain. We see two pairs of commitment transactions, with output transactions shown for the older pair. In this example Bob has published his old commitment transaction violating the agreement, therefore we see that Alice therefore can publish transactions spending both outputs.   Source: \cite{poon2015bitcoin}}
+    \label{fig:ln_breach}
+\end{figure}
+
+Publishing a old commitment transaction as described above will spend the founding transaction and close the channel in addition to the other implications already described.
+The channel can also be closed out by either of the parties publishing the most recent commitment transaction. If Bob was the one who published Alice can spend her output at once but Bob has to wait for confirmations in the blockchain before he can claim his. But still he will eventually get his output, and since no breach remedy transaction has been made since it is the newest commitment there is nothing Alice can do to stop him from getting his output.
+The channel can also be cooperatively closed by both parties agreeing to do so. They simply create new transaction spending the founding transaction with the outputs reflecting the balance in the latest commitment. They echange signatures and it can be published on the blockchain. This transaction does not contain any Revocable delivery transaction on its output meaning both will be able to claim their founds at once. 
+Another reason for doing this is that the total number of transactions that will be published to the blockchain will be less, one founding and one settlement instead of the extra revocation transaction.
+
+\chapter{Networked Channels using HTLC}
+
+The payment channels discussed in the previous section are for two parties to exchange founds with each other.
+The lighting network is networked payment channels, this means that one can send founds across several payment channels. If everyone needed to create a payment channel everyone else it would not be very useful, so that is why networks of channels are used. Lets say Alice and Bob has a payment channel, but Bob and Dave also has one. Alice wishes to send founds to Dave and can do so by sending it first trough her existing channel with Bob, and Bob can use his channel with Dave to deliver him the payment.
+
+\section{Hashed Timelock Contract}
+
+As shown the payment channels used in the lighting network does not require trust to function. The same should be the case for doing payments across channels without trusting the intermediary nodes along the path. The mechanism that enables this is called Hashed Timelock Contracts (HTLC).
+It works by creating contracts where intermediary nodes have a guarantee that they can get their money from the sender, if they first transfer to the receiver. By having the intermediary first pay the receiver and then get money from the sender one stops the intermediary from stealing the founds. If the intermediary was sent the founds first by the sender they could simply not pay the receiver and keep the money. But as mentioned for the intermediary to accept this they need to be sure that the sender will pay them what they have given the receiver. Using a hash function and an input or preimage R this guarantee can be crated. The receiver inputs R into the function and gets a hash H which is given to the sender. The sender promises to pay the intermediary if they can give R that generates H. The intermediary then promises to pay the receiver if they can provide a R that generates H. Since it was the receiver who created H and therefore has R they can give it to the intermediary and get the founds. Now the intermediary knows R and get the founds from the sender as promised.
+
+\paragraph{}
+The promise to pay someone in exchange for disclosing R is not just a promise. It is a transaction which needs R to be claimed. Therefore when the sender promises to pay the intermediary the sender is no longer in possession of the founds. So the founds are effectively transferred in a manner and direction one would expect (sender, intermediary, receiver) but requires R to be used. The timelock is what ensures that if no R is provided the founds can be returned to the one who promised them. It basically ensures delivery of the founds by setting a deadline on providing R. If no such thing existed the series of exchanges could be delayed or stopped by nodes not disclosing R and claiming their founds.
+With and example and figures \ref{fig:htlc_promise} and \ref{fig:htlc_settle} illustrating we can see this in action.
+Alice wishes to send founds to Dave, but to do so she must first send them through Bob and then Carol. Dave is the one who creates the hash H with the preimage R and sends H to Alice. She sees that there needs to be three transfers for the founds to reach Dave, so she creates the first HTLC with a three day timelock and sends it to Bob shown as step 1 in fig.\ref{fig:htlc_promise}. To re-iterate the HTLC is a transaction where the preimage R has to be given for the founds to be claimed, if R is not given within the timelock timeframe (three days in this case) the founds can be reclaimed by the creator of the HTLC. Bob creates a new HTLC for Carol with the same condition except that the timelock is two days shown as step 2 in fig.\ref{fig:htlc_promise}. In step 3 Carol creates a HTLC for Dave with the timelock set to one day. At this point the founds have been sendt but no one has claimed the founds in the HTLC's, and if it does not happen the founds will be returned when the timelock expires.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=11cm]{htlc_promise.png}
+    \caption{ Creating a HTLC between each node with a decrementing timelock. Source: \cite{poon2015bitcoin}}
+    \label{fig:htlc_promise}
+\end{figure}
+
+In fig.\ref{fig:htlc_settle} we see steps 4, 5 and 6 done. Since it is Dave who knows R he must start the process. In step 4 he reveals R to Carol to claim the founds in their HTLC. Carol can then do the same with Bob in step 5, and finally step 6 where Bob can pull his founds from Alice.
+Now the founds have been fully transferred from Alice to Dave.
+The reason that the timelock must be shorter the closer we get to the final receiver of the founds is because it ensures that each person has time to pull the founds from the preceding one. Lets say that step 3 in fig.\ref{fig:htlc_promise} had a timelock of 5 days, and Dave waited 4 days to disclose R to Carol and get founds from her. The HTLC from Bob to Carol would have expired by then and Bob would have reclaimed his founds, meaning Carol has lost her founds to Dave without any way of getting them back.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=11cm]{htlc_settle.png}
+    \caption{ Founds are pulled in reverse order meaning Dave the receiver gets the founds first and the sender Alice looses her's last. Source: \cite{poon2015bitcoin}}
+    \label{fig:htlc_settle}
+\end{figure}
+
+
+\section{HTLC inside the payment channel}
+The previous section explained how HTLC's can be used to transfer founds across different payment channels.
+Here we will show how the HTLC construct interact with the already established dynamic within a payment channel.
+A HTLC inside a payment channel will be a output of commitment transactions. Outputs of these commitment transactions reflected the balance between the parties inside the channel, so by having another output we can also reflect founds in transit. The HTLC output is a special type of output; it is a output script which can two different paths to redeeming the output: one is by providing the preimage R, and the other is by waiting for the timelock to expire. As with other output it can only be spent once, and this type must be spent in one of the two ways explained.
+
+\paragraph{}
+As an output of commitment transaction the HTLC uses founds available in the channel. If the value of a channel is 10 coins with a 5 to each split, a HTLC for 1 coin will be reflected in the commitment trasaction as the sender having 4 coins, but the total value of the channel will still be 10 (4 sender, 1 HTLC, and 5 reciver). If they both agree on who can spend the HTLC output-e.g., receiver knows the preimage R they can spend. or the timelock is over the sender can spend it, then they can cancel the HTLC and create a new commitment transaction reflecting the new balance. This new balance is either the receiver getting the value of the HTLC or the sender getting it back. This is how HTLC's are resolved off-chain.
+
+\paragraph{}
+The two ways of spending a HTLC output by creating a "delivery" transaction which needs the preimage R to be valid and the "timeout" transaction which is not valid until the timelock is gone. If they fulfill their conditions both of these can be broadcast to the blockchain. But since the these transactions spend a output of a commitment transaction the commitment transaction would also need to be broadcast on the blockchain to be able to spend its outputs in new transactions. As explained earlier both parties have the opportunity to broadcast their commitment transaction but restrictions will apply when doing so. The one who published a commitment transaction had to wait before being able to claim their output, while the other party could claim theirs at once. In addition, if the commitment transaction was old and had been revoked by the creation of a superseding transaction spending the
+broadcasters output, the other party could use this to get all the founds since the broadcaster had to wait to spend their output.
+Similar mechanisms are used when adding the third HTLC output on the commitment transactions. Using the example of Alice and Bob having a 1 coin channel with a 0.5 to each balance we can see how this works. Alice sends Bob 0.1 coins using a HTLC and they create a new pair of commitment transactions (C2a, C2b) as shown in fig.\ref{fig:htlc_commit} where Alice can broadcast the purple ones and Bob the blue.
+
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=14cm]{ln_htlc.png}
+    \caption{  Source: \cite{poon2015bitcoin}}
+    \label{fig:htlc_commit}
+\end{figure}
+
+
+\paragraph{}
+If the sender, in this case Alice is the one who broadcasts her commitment transaction (C2a) she will have the restrictions placed on her.
+In fig.\ref{fig:htlc_commit} this means that the left side will be executed. The commitment transaction (C2a) has three outputs: output 0 is 0.4 to Alice herself (RD2a), but since it is her commitment transaction she will have to wait for confirmations to be able to spend; output 1 is 0.5 for Bob which he can spend immediately (D2a); output 2 is the HTLC which has two different output paths, Bob can spend at once creating a transaction containing the preimage R (HED1a), or Alice can spend (HT1a) when the timelock has expired but this spend will a RSMC (HTRD1a) having her wait for confirmations similarly as her normal output. This is because similarly as old commitment transactions are invalidated by exchanging breach remedy transactions the same is done by exchanging keys for spending the HTLC output. So if an old commitment transaction is broadcast the party who broadcast will also loose the HTLC output in addition to the normal output, since the other party will be able to spend it and broadcast to the blockchain before the RSMC has enough confirmations. In this case it will enable Bob to broadcast a transaction spending the value of the HTLC before Alice can.
+
+\paragraph{}
+In the case of Bob, the receiver broadcasting the commitment transction (C2b) the left side of fig.\ref{fig:htlc_commit} will be executed. We can see that the structure is the same but now Alice and Bob have different restrictions. The output of the commitment transactions remains the same except that now it is Bob who has to wait for confirmations to get his normal output of 0.4 because of the RSMC (RD2b), and Alice can spend hers at once (D2b). In the case of the HTLC output the two parties still have their sender and receiver status meaning Alice can only spend by Timeout of the timelock (HTD1b), and Bob only by providing the preimage R (HE1b). However, since it now was Bob who broadcasted the commitment he is the one who has to get restricted getting the output. So the output of the transaction spending the HTLC output using R (HE1b) is now a RSMC (HERD1b) which will require confirmations to become valid. This is to once again enable the other party (Alice) to get the value in the HTLC if the commitment transaction is an old one.  
+
+\paragraph{}
+
+
+
+\chapter{Network Routing}
+
 
 \chapter{Spesification and Implementation}
 SIGHASH NOINPUT
