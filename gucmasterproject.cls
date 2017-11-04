@@ -374,9 +374,9 @@ Use $\backslash$useyear\{<year>\} to set year.
 \DeclareOption{informationsecurity}{%
   \renewcommand\gmt@firstpagetext{%
     Specialization Project Report\\
-    Master of Science in Information Security\\
+    %Master of Science in Information Security\\
     7,5 ECTS\\
-    Department of Computer Science and Media Technology\\
+    Department of Information Security and Communication Technology \\
     Norwegian University of Science and Technology, \gmt@frontpagesyear
   }
   \renewcommand\gmt@secondpagetext{\gmt@imttext}
@@ -411,7 +411,7 @@ Use $\backslash$useyear\{<year>\} to set year.
     \vfill
     \vskip 3em
     \begin{center}%
-      \includegraphics[width=70pt]{20_872339925_hovedlogo_eng.pdf} \\
+      \includegraphics[width=270pt]{20_872339925_hovedlogo_eng.pdf} \\
       \medskip
       \gmt@firstpagetext
     \end{center}

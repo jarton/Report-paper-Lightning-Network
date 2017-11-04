@@ -116,7 +116,7 @@ This system of outputs being inputs in new transactions as shown in fig.\ref{fig
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=10cm]{LN_Trans.png}
+    \includegraphics[width=10cm]{figs/LN_Trans.png}
     \caption{Visualization of transactions inputs and outputs. We can see the method of splitting founds by taking one input and splitting it out over many outputs. Similarly one can take many inputs from different transactions and combine them into one output.}
     \label{fig:ln_trans}
 \end{figure}
@@ -126,7 +126,7 @@ The blockchain is the distributed data structure that stores all the transaction
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=10cm]{blockchain.png}
+    \includegraphics[width=10cm]{figs/blockchain.png}
     \caption{A part of the blockchain visualized. Each block contains a reference to the preceeding one.}
     \label{fig:blockchain}
 \end{figure}
@@ -160,7 +160,12 @@ The basic idea of the lightning network is that two parities can exchange founds
 When a exchange happens a new transaction with the current balance is created, but they defer telling the rest of the Bitcoin network about the transaction-i.e., the transaction being included in the blockchain. This means more exchanges can be done and the balance simply updated.
 When one of the parties finally publishes it to the rest of the network it will be included in the blockchain and verified. Only one transaction needs to be published for the many that happened in private between the parties. These transactions happening without the blockchain knowing is why these are called off-chain transactions. This will reduce the amount of transactions needed to be published and therefore allow for more users and more transactions. But since many of those are off-chain it will not impact the bitcoin network.
 
+
+%%%%%%%% PAYMENT CHANNELS CHAPTER %%%%%%%%%%%%
+
 \chapter{Payment Channels}
+
+\cite{decker2015fast}
 
 One of the core elements of the lighting network design is payment channels which allow two parties to exchange founds between each other.
 It is inside these that the balance between the parties in the channel are agreed on and updated.
@@ -179,7 +184,7 @@ The transactions describing the balance between Alice and Bob are called commitm
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=12cm]{ln_commit.png}
+    \includegraphics[width=12cm]{figs/ln_commit.png}
     \caption{The founding transaction is colored green to show it has been published to the blockchain. It has two commitment transactions. The leftmost is the original and the right shows the balance after Alice sends Bob 1 coin. Source: \cite{poon2015bitcoin}}
     \label{fig:ln_commit}
 \end{figure}
@@ -201,7 +206,7 @@ The timeout of transaction outputs or Revocable Sequence Maturity Contracts (RSM
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=12cm]{ln_timeout.png}
+    \includegraphics[width=12cm]{figs/ln_timeout.png}
     \caption{Here we see a pair of commitment transactions for Alice and Bob and their outputs. Purple indicates that Alice can publish and blue shows that Bob can publish. Source: \cite{poon2015bitcoin}}
     \label{fig:ln_timeout}
 \end{figure}
@@ -216,7 +221,7 @@ Alice sees on the blockchain that an old commitment transaction has been publish
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=14cm]{ln_breach.png}
+    \includegraphics[width=14cm]{figs/ln_breach.png}
     \caption{This is what happens when an old commitment transaction is published. Green indicate that the transaction is published to the blockchain. We see two pairs of commitment transactions, with output transactions shown for the older pair. In this example Bob has published his old commitment transaction violating the agreement, therefore we see that Alice therefore can publish transactions spending both outputs.   Source: \cite{poon2015bitcoin}}
     \label{fig:ln_breach}
 \end{figure}
@@ -243,7 +248,7 @@ Alice wishes to send founds to Dave, but to do so she must first send them throu
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=11cm]{htlc_promise.png}
+    \includegraphics[width=11cm]{figs/htlc_promise.png}
     \caption{ Creating a HTLC between each node with a decrementing timelock. Source: \cite{poon2015bitcoin}}
     \label{fig:htlc_promise}
 \end{figure}
@@ -254,7 +259,7 @@ The reason that the timelock must be shorter the closer we get to the final rece
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=11cm]{htlc_settle.png}
+    \includegraphics[width=11cm]{figs/htlc_settle.png}
     \caption{ Founds are pulled in reverse order meaning Dave the receiver gets the founds first and the sender Alice looses her's last. Source: \cite{poon2015bitcoin}}
     \label{fig:htlc_settle}
 \end{figure}
@@ -276,8 +281,8 @@ Similar mechanisms are used when adding the third HTLC output on the commitment 
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=14cm]{ln_htlc.png}
-    \caption{  Source: \cite{poon2015bitcoin}}
+    \includegraphics[width=14cm]{figs/ln_htlc.png}
+    \caption{ Overview of transactions when including HTLC output to the commitment transactions. Again we have a mirrored structure with the left side showing the case of Alice broadcasting the commitment and the right side Bob broadcasting.  Source: \cite{poon2015bitcoin}}
     \label{fig:htlc_commit}
 \end{figure}
 
@@ -290,10 +295,27 @@ In fig.\ref{fig:htlc_commit} this means that the left side will be executed. The
 In the case of Bob, the receiver broadcasting the commitment transction (C2b) the left side of fig.\ref{fig:htlc_commit} will be executed. We can see that the structure is the same but now Alice and Bob have different restrictions. The output of the commitment transactions remains the same except that now it is Bob who has to wait for confirmations to get his normal output of 0.4 because of the RSMC (RD2b), and Alice can spend hers at once (D2b). In the case of the HTLC output the two parties still have their sender and receiver status meaning Alice can only spend by Timeout of the timelock (HTD1b), and Bob only by providing the preimage R (HE1b). However, since it now was Bob who broadcasted the commitment he is the one who has to get restricted getting the output. So the output of the transaction spending the HTLC output using R (HE1b) is now a RSMC (HERD1b) which will require confirmations to become valid. This is to once again enable the other party (Alice) to get the value in the HTLC if the commitment transaction is an old one.  
 
 \paragraph{}
+Similarly as with channel operation without HTLC it is desirable to avoid publishing to the blockchain unless it is necessary. The parties can cooperate and agree on new commitment transactions with or without HTLC outputs. To resolve a HTLC one of the parties must simply prove to the other that they are capable of spending the HTLC output and can do so on the blockchain if they wish. If Bob is the receiver he can publish the commitment transaction and if he has the preimage R he can also create a transaction spending this; because he is the broadcaster he must wait for confirmations on both but will eventually receive his founds. If Bob does not have the preimage R and the timelock has expired Alice can do the same. Since they can prove to the other party that they have this possibility they can instead just create a new commitment transaction pair with the HTLC value either transferred to Bob or returned to Alice, thereby keeping the channel open. When doing this they need to invalidate their old commitment transactions and also the HTLC output to these by exchanging breach remedy transactions and keys. So again we have a system for exchanges between two parties but with the possibility of also using HTLC's which requires no trust, few transactions to be broadcast to the blockchain unless one party is unresponsive or unwilling to co-operate, and allows for founds to be transferred trough many channels.  
+When using the HTLC construct to send founds across these channels as shown in fig.\ref{fig:htlc_settle} broadcasting to the blockchain as discussed in this section will ensure the transfer will finish in the event of a node not co-operating as illustrated in fig.\ref{fig:htlc_bc}.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=10cm]{figs/htlc_bc.png}
+    \caption{ Settlement of HTLC contracts in the event of unresponsive node. Source: \cite{poon2015bitcoin}}
+    \label{fig:htlc_bc}
+\end{figure}
 
 
+\let\cleardoublepage\clearpage
 
-\chapter{Network Routing}
+\chapter{Networking and Routing}
+
+The Lightning Network is created by by people having payment channels open to each other thereby creating a network of channels. What topology the network should have is important with regards to issues such as routing, centralization, optimization, and privacy. The Lightning network paper itself\cite{poon2015bitcoin} states that eventually the network will have core nodes which have channels open to each other, and average users will connect to these when needing to do transfers. This topology is called hub-and-spoke where the core nodes are the hubs and the spokes are the end users connecting to the hub. As we have seen in the previous chapters a channel will have a value which is decided at its creation. This value is the maximum available in this channel, and the founds is tied to this channel and cannot be used for something else. The founds will only be available to use for other purposes by closing out the channel. This 
+
+\section{Routing}
+
+
+\section{Onion Routing}
 
 
 \chapter{Spesification and Implementation}
