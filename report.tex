@@ -86,8 +86,6 @@ Version \#  & Description of change (why, what where - a few sentences)\\
 \newpage
 
 \begin{abstract}
-The lightning network consists of networked payment channels which are able to do Bitcoin transactions off-chain\cite{poon2015bitcoin}.
-This will decrease the total amount of transactions that needs to be spread through the bitcoin network and the amount thats included in the blockchain; giving Bitcoin much greater scalability.
 
 \end{abstract}
 
@@ -151,14 +149,17 @@ In the paper they define throughput as how many transactions that can be done ea
 One must also consider the size of the blockchain. At the time of writing this paper (October 2017) this is at about 138.000 MB or 134 GB \cite{blockchain_size}. While the storage capabilities on modern computers can accommodate this, the size of the blockchain in the future may cause users with standard consumer computer setup to not want to store the full blockchain because of the storage space requirements. Bitcoin users who have a updated copy of the blockchain run what is called a full node. SPV or simple payment verification nodes are a alternative that does not store the data, but asks full nodes for data when required. The storage requirement may cause many users to switch from a full node to a SPV node. 
 
 \paragraph{}
-The lightning network is a solution to the scalability problems facing Bitcoin\cite{poon2015bitcoin}.
-In the paper they warn that trying to scale the current system will lead to an extreme centralization in the bitcoin network.
-Having very large blocks, extreme difficulty mining, and a blockchain that has grown beyond a single hard disk will mean only people who can afford it, have the knowledge, and specialized equipment will be able to perform these tasks which where meant to be decentralized. The rest of the users will simply have to trust these central entities and the whole point of the bitcoin technology is lost.
+The Lightning Network is a proposed solution to the scalability problems facing Bitcoin.
+In the paper by Joseph Poon and Thaddeus Dryja \cite{poon2015bitcoin} warn that trying to scale the current system will lead to an extreme centralization in the Bitcoin network.
+Having very large blocks, extreme difficulty mining, and a blockchain that has grown beyond a single hard disk will mean only people who can afford it, have the knowledge, and specialized equipment will be able to perform these tasks which where meant to be decentralized. The rest of the users will simply have to trust these central entities and one of the core aspects of the Bitcoin technology is lost.
 
 \paragraph{}
-The basic idea of the lightning network is that two parities can exchange founds several times, and later only tell the rest of the Bitcoin network the final result.
+The basic idea of the lightning network is that it allows two parities can exchange founds several times, and later only tell the rest of the Bitcoin network the final result.
 When a exchange happens a new transaction with the current balance is created, but they defer telling the rest of the Bitcoin network about the transaction-i.e., the transaction being included in the blockchain. This means more exchanges can be done and the balance simply updated.
-When one of the parties finally publishes it to the rest of the network it will be included in the blockchain and verified. Only one transaction needs to be published for the many that happened in private between the parties. These transactions happening without the blockchain knowing is why these are called off-chain transactions. This will reduce the amount of transactions needed to be published and therefore allow for more users and more transactions. But since many of those are off-chain it will not impact the bitcoin network.
+When one of the parties finally publishes it to the rest of the network it will be included in the blockchain and verified. Only one transaction needs to be published for the many that happened in private between the parties. These transactions happening without the blockchain knowing is why these are called off-chain transactions. This will reduce the amount of transactions needed to be published and therefore allow for more users and more transactions. But since many of those are off-chain it will not impact the Bitcoin network. The users connect to each other and use this method to route payment to each other creating a payment network which can scale independently from the blockchain.
+
+\paragraph{}
+Poon and Dryja. outlines several usecases in the paper \cite{poon2015bitcoin} where the lightning network has advantages or possibilities which the current Bitcoin solution does not. The first one is near instant payments, meaning a non-revocable transfer can be done in seconds. Micropayments becomes practical when avoiding the fees for having a transaction included in a block. Creating complex smart contracts outside the blockchain, these contracts are created by using advanced transaction scripts. Cross chain payment functionality between blockchains of different types could also be a possibility.
 
 
 %%%%%%%% PAYMENT CHANNELS CHAPTER %%%%%%%%%%%%
@@ -167,13 +168,15 @@ When one of the parties finally publishes it to the rest of the network it will 
 
 \cite{decker2015fast}
 
-One of the core elements of the lighting network design is payment channels which allow two parties to exchange founds between each other.
+One of the core elements of the lighting network design outlined in the paper by Poon and Dryja \cite{poon2015bitcoin} is payment channels, which allow two parties to exchange founds between each other.
 It is inside these that the balance between the parties in the channel are agreed on and updated.
 The total amount of value in the channels is decided when the channel is created, and distributed to the parties according to the balance when something is published to the blockchain.
 
+
 \section{Channel Creation}
+
 The mechanisms for doing exchanges in the channel are simple themselves but there are many problems that arise when doing transactions off-chain.
-A payment channel between Alice and Bob uses 2of2 multisignature bitcoin transactions. A multisignature transaction means that multiple keys are required to spend output from a transaction. A 2of2 multisignature means that 2 keys of a potential 2 keys are required in this case-i.e., both Alice and Bob needs to use their keys. This ensures that both sides need to agree on transactions done with the coins in the channel. Without it, one of them could just create a new transaction spending all founds in the channel, publish it to the blockchain, and thereby stealing from the other.
+A payment channel between Alice and Bob uses 2of2 multisignature Bitcoin transactions. A multisignature transaction means that multiple keys are required to spend output from a transaction. A 2of2 multisignature means that 2 keys of a potential 2 keys are required in this case-i.e., both Alice and Bob needs to use their keys. This ensures that both sides need to agree on transactions done with the coins in the channel. Without it, one of them could just create a new transaction spending all founds in the channel, publish it to the blockchain, and thereby stealing from the other.
 
 \paragraph{}
 To exchange founds in a channel one first needs to create whats called a "founding transaction". It's purpose is to create a common starting point for creation of new transactions in the channel. The input value of the founding transaction can come from one or both of the parties in the channel, but the output will have a 2of2 multisignature condition. Then a new transaction spending the output of the founding transaction is created which refund the input value of the founding transactions back to its original owner, also with a mutlisignature condition on it's output. At this point no signatures for either the founding or refund-transaction has been exchanged. This is done in a specific order where first the refund transaction is signed by both sides, and only then are signatures exchanged for the founding transaction. The reason for this is to avoid the founds being stuck in the founding transaction because of the multisignature condition on its output. If the founding transaction where published without or before a refund transaction was created, either Alice or Bob could render the founds unusable by not co-operating. After the signatures for the founding transactions has been exchanged it is published to the blockchain. The founding transaction starting point is now established; containing the total value available in the channel and allowing for refunds by either party by publishing the refund transaction.
@@ -234,7 +237,8 @@ Another reason for doing this is that the total number of transactions that will
 \chapter{Networked Channels using HTLC}
 
 The payment channels discussed in the previous section are for two parties to exchange founds with each other.
-The lighting network is networked payment channels, this means that one can send founds across several payment channels. If everyone needed to create a payment channel everyone else it would not be very useful, so that is why networks of channels are used. Lets say Alice and Bob has a payment channel, but Bob and Dave also has one. Alice wishes to send founds to Dave and can do so by sending it first trough her existing channel with Bob, and Bob can use his channel with Dave to deliver him the payment.
+Poon and Dryja \cite{poon2015bitcoin} outlines a network of such payment channels forming
+the Lighting Network. This means that a user can send founds to another across several payment channels. If everyone needed to create a payment channel everyone else it would not be very useful, so that is why networks of channels are used. Lets say Alice and Bob has a payment channel, but Bob and Dave also has one. Alice wishes to send founds to Dave and can do so by sending it first trough her existing channel with Bob, and Bob can use his channel with Dave to deliver him the payment.
 
 \section{Hashed Timelock Contract}
 
@@ -310,20 +314,38 @@ When using the HTLC construct to send founds across these channels as shown in f
 
 \chapter{Networking and Routing}
 
-The Lightning Network is created by by people having payment channels open to each other thereby creating a network of channels. What topology the network should have is important with regards to issues such as routing, centralization, optimization, and privacy. The Lightning network paper itself\cite{poon2015bitcoin} states that eventually the network will have core nodes which have channels open to each other, and average users will connect to these when needing to do transfers. This topology is called hub-and-spoke where the core nodes are the hubs and the spokes are the end users connecting to the hub. As we have seen in the previous chapters a channel will have a value which is decided at its creation. This value is the maximum available in this channel, and the founds is tied to this channel and cannot be used for something else. The founds will only be available to use for other purposes by closing out the channel. This 
+The Lightning Network is created by by people having payment channels open to each other thereby creating a network of channels. What topology the network should have is important with regards to issues such as routing, centralization, optimization, and privacy.  As we have seen in the previous chapters a channel will have a value which is decided at its creation. This value is the maximum available in this channel, and the founds is tied to this channel and cannot be used for something else. The founds will only be available to use for other purposes by closing out the channel. To keep several open channels means that founds will be tied up in those, and to have enough capacity in these the total value of each channel will be large. If other users uses your channels to route founds through it will also tie up a part of the available value in those channels for a while. Therefore it is proposed in the Lightning network paper\cite{poon2015bitcoin} that one should pay fees to transfer founds since consuming space in other nodes channels. 
 
 \section{Routing}
+
+The routing in the network will be heavily influenced by the topology the network will have with one important aspect being the degree of centralization.
+The Lightning network paper itself\cite{poon2015bitcoin} imagines that eventually the network will have core nodes which have channels open to each other, and average users will connect to these when needing to do transfers. This topology is called hub-and-spoke where the core nodes are the hubs and the spokes are the end users connecting to the hub. These core nodes will have the resources to run channels with high capacity for long periods to other core nodes making making transfers effective. The fees end users pay for transferring founds will be the incentive for running these, effectively providing a payment transferring service to end users. 
+
+\paragraph{} 
+A paper by Prihodko et al. in which a routing algorithm called Flare\cite{prihodko2016flare} is suggested, which will be discussed later does also provide an overview of suggested typologies and routing mechanisms. They state some observations about a hub-and-spoke network with enforced roles, meaning where some nodes can only route payments (the hubs) and others only send or receive payments. This strong separation will mean that the set of hubs will be known and not constantly changing, therefore be finding a route to a specific hub will be fast. They also note some negative aspects with this like 
+end user nodes not having any reason for staying connected to the network, and therefore payments might not reach recipient at once since they will need to connect to the network first. It can also cause some high degree of centralization in the network and in addition to contradicting one of the core aspects of Bitcoin it will also decrease the fault tolerance. Another paper discussing payment channel networks\cite{mccorry2016towards} identifies another aspect of this topology which must be considered; that is the open-memberhip property. For this topology it would mean the ability of potentially anyone to become a hub node if they want. But high requirements can limit this possibility. This is somewhat of a similar problem discussed in chapter one where trying to scale Bitcoin will lead to very high requirements to run a full-node.
+
+\paragraph{}
+The  paper by Prihodko et al.\cite{prihodko2016flare} also covers two other suggestions which are quite similar.
+They where both originally discussed on the lightning network developer mailing list\cite{rusty_routing1} \cite{rusty_routing2} \cite{rusty_routing3}. The concept is that a subset of hubs will be selected at random to become global "beacons". The other nodes find the paths to these, meaning the beacons will act as meeting place between sender and receiver. The receiver will know its paths to the beacons and therefore pick the best one and send it to the sender. Now the sender knows the path from a beacon to the sender and they already know their paths to the beacons. The task of being beacons will be rotated at intervals to make it harder for a single entity to control parts of the network. Becoming a beacon will mean that a lot of traffic will be coming but also earnings from fees will high.
+Prihodko et al.\cite{prihodko2016flare} points out several challenges with this strategy: the requirements for being a beacon is so high that the list of potential beacons would be too small; beacons themselves could be targets of DOS attacks; the channels crated while a node is a beacon will have very limited use afterwards. The other suggested solution is very similar and also uses beacons but these are personal for each node. Nodes will then have find similarities in their beacons to do transactions. A solution where each node can become one of the beacon nodes for other nodes the result will be a more evenly used network where nodes have incentives to stay online and connected.
+
+\paragraph{}
+The degree of decentralization possible in the network has sparked some debate \cite{
+
+\paragraph{}
+Flare
+
 
 
 \section{Onion Routing}
 
 
 \chapter{Spesification and Implementation}
-SIGHASH NOINPUT
-BOLT 
-LND
-SEGWIT??
-.
+SIGHASH NOINPUT \\
+BOLT \\
+LND \\
+SEGWIT \\
 
 
 
