@@ -331,10 +331,10 @@ They where both originally discussed on the lightning network developer mailing 
 Prihodko et al.\cite{prihodko2016flare} points out several challenges with this strategy: the requirements for being a beacon is so high that the list of potential beacons would be too small; beacons themselves could be targets of DOS attacks; the channels crated while a node is a beacon will have very limited use afterwards. The other suggested solution is very similar and also uses beacons but these are personal for each node. Nodes will then have find similarities in their beacons to do transactions. A solution where each node can become one of the beacon nodes for other nodes the result will be a more evenly used network where nodes have incentives to stay online and connected.
 
 \paragraph{}
-The degree of decentralization possible in the network has sparked some debate \cite{
+The degree of decentralization possible in the network has sparked some debate \cite{}
 
 \paragraph{}
-Flare
+Flare 
 
 
 
@@ -342,10 +342,28 @@ Flare
 
 
 \chapter{Spesification and Implementation}
+
+\section{Segregated witness}
+Segregated Witness or segwit is a upgrade to the Bitocoin technology first presented at the 2015 Scaling Bitcoin conference\cite{SB_segwit}. The upgrade changes how transactions are validated and how the transactions themselves are structured.
+In chapter 1 we discussed how transactions consists of inputs and outputs. A requirement was placed on the output to be able to spend it which was a cryptographic key. But we have also seen other conditions that must be fulfilled to spend such as multiple signatures or a timelock. These conditions to spend a output is called "locking-script", "witness-script", or scriptPubKey \cite{antonopoulos2017mastering}. It is called a script because output conditions can be "scripted" to require specific things. The witness-script is included in the output section of each transaction. Similarly the input section of transactions have a script called "unlocking-script", "witness" or scriptSig. The witness fulfills the conditions created in the output which the input spends. So we have transactions with output scripts that sets conditions to spend, and the transactions spending these outputs have input scripts that meets these. The idea of segwit is to separate the witness or unlocking script from the transaction into a separate data entity. 
+
+\paragraph{}
+There are many reasons and benefits of doing this seperation\cite{antonopoulos2017mastering}\cite{BC_segwit}. One of these is that it disables transaction malleability. The bitcoin transactions have a transaction id (txid) which is a hash of all its properites including the scriptSig or witness. The malleable parts of a transaction is the scriptSig, this is because a transaction is unique and founds can only be spent once; so if the choice of inputs, choice of outputs, or the value of these changes, it is no longer the same transaction.
+Therefore, when the transaction has been created most of it is non malleable. But the scriptSig can be modified in different ways without invalidating the transaction and without knowing the public key \cite{BIP62}. Since a hash function is used to create the txid it will result in the transaction having a completely different id. With segwit the txid is created without the scriptSig since it is locate in separate data structure meaning the txid will be immutable once it is created. Another very important benefit is that the size of transactions are smaller since it no longer includes the scriptSig. The witness data structure can be deleted after it is verified or simply do not need to accompany the transaction at all-e.g., Simple payment verification (SPV) do not need the witness data.
+Other improvements are reduced computational requirements for the script operations which will lead to faster verification of scritSig's.
+There is also script versioning to make it easier to introduce new operations without running into problems with nodes supporting them or not.
+
+\paragraph{}
+The segwit upgrade is now active on the Bitcoin network because a majority of the nodes do support it. This type of change is whats called a soft fork. A fork is when the blockchain split and diverges \cite{antonopoulos2017mastering}. A change or upgrade in how the nodes operate in the network can cause a fork since the nodes who upgrade will only follow the new rules, and the non upgraded nodes will only follow theirs. If the new and old rules are incompatible, the result will be a split blockchain, each with a set of nodes working only with their own methods. This is known as a hard fork and is undesirable because it will split the network if not everyone upgrades or decided to use the new consensus rules. A soft for as the segwit upgrade was does not cause a fork at all, but allows the upgraded and ungraded nodes to work together-i.e., the upgrade is backwards compatible. When a non segwit supported node looks at a segwit transaction output it will interpret it as being spendable by using an empty signature, but the transaction will still be considered valid \cite{antonopoulos2017mastering}. Segwit enabled nodes which is the majority, will be able to look at the witness and validate transactions correctly. Therefore, segwit transactions are backwards compatible because they will not be invalidated by old non segwit nodes.
+
+\paragraph{}
+The activation of segwit is important for the Lightning Network. As described above one of the issues segwit fixes is the transaction malleability problem, which in the Lightning Netowrk paper \cite{poon2015bitcoin} is stated as essential for the design outlined to work properly. The issue outlined there is destroying signatures such that transactions are no longer valid. A issue outlined in the Lightning Network Community Blog Post\cite{LN_segwit} about the alpha release of their Lightning Network implementation is monitoring of the blockchain. The two parties in a channel had to monitor the blockchain for the other broadcasting old commitment transactions. With segwit the transaction id can be known ahead of time because it cannot be changed once a transaction is crated. This also creates the possibility for outsourcing the blockchain monitoring to a third party, meaning the Lightning nodes does not need to be a full Bitcoin node.
+
+\section{BOLT}
+
+
 SIGHASH NOINPUT \\
-BOLT \\
 LND \\
-SEGWIT \\
 
 
 
