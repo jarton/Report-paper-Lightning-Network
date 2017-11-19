@@ -411,7 +411,7 @@ Use $\backslash$useyear\{<year>\} to set year.
     \vfill
     \vskip 3em
     \begin{center}%
-      \includegraphics[width=270pt]{20_872339925_hovedlogo_eng.pdf} \\
+      \includegraphics[width=80pt]{20_872339925_hovedlogo_eng.png} \\
       \medskip
       \gmt@firstpagetext
     \end{center}
