@@ -27,10 +27,11 @@
     \fi
     %% Her kan du putte dine vanlige pakker og definisjoner
 
+\usepackage{amsfonts}
 
 
 %\usepackage[dvips]{hyperref}    % For cross references in pdf
-\usepackage{hyperref}
+\PassOptionsToPackage{hyphens}{url}\usepackage{hyperref}
 \usepackage{mdwlist}
 \usepackage{url}
 \usepackage{here}
@@ -309,36 +310,8 @@ When using the HTLC construct to send founds across these channels as shown in f
     \label{fig:htlc_bc}
 \end{figure}
 
-\let\cleardoublepage\clearpage
-
-\chapter{Networking and Routing}
-
-The Lightning Network is created by by people having payment channels open to each other thereby creating a network of channels. What topology the network should have is important with regards to issues such as routing, centralization, optimization, and privacy.  As we have seen in the previous chapters a channel will have a value which is decided at its creation. This value is the maximum available in this channel, and the founds is tied to this channel and cannot be used for something else. The founds will only be available to use for other purposes by closing out the channel. To keep several open channels means that founds will be tied up in those, and to have enough capacity in these the total value of each channel will be large. If other users uses your channels to route founds through it will also tie up a part of the available value in those channels for a while. Therefore it is proposed in the Lightning network paper\cite{poon2015bitcoin} that one should pay fees to transfer founds since consuming space in other nodes channels. 
-
-\section{Routing}
-
-The routing in the network will be heavily influenced by the topology the network will have with one important aspect being the degree of centralization.
-The Lightning network paper itself\cite{poon2015bitcoin} imagines that eventually the network will have core nodes which have channels open to each other, and average users will connect to these when needing to do transfers. This topology is called hub-and-spoke where the core nodes are the hubs and the spokes are the end users connecting to the hub. These core nodes will have the resources to run channels with high capacity for long periods to other core nodes making making transfers effective. The fees end users pay for transferring founds will be the incentive for running these, effectively providing a payment transferring service to end users. 
-
-\paragraph{} 
-A paper by Prihodko et al. in which a routing algorithm called Flare\cite{prihodko2016flare} is suggested, which will be discussed later does also provide an overview of suggested typologies and routing mechanisms. They state some observations about a hub-and-spoke network with enforced roles, meaning where some nodes can only route payments (the hubs) and others only send or receive payments. This strong separation will mean that the set of hubs will be known and not constantly changing, therefore be finding a route to a specific hub will be fast. They also note some negative aspects with this like 
-end user nodes not having any reason for staying connected to the network, and therefore payments might not reach recipient at once since they will need to connect to the network first. It can also cause some high degree of centralization in the network and in addition to contradicting one of the core aspects of Bitcoin it will also decrease the fault tolerance. Another paper discussing payment channel networks\cite{mccorry2016towards} identifies another aspect of this topology which must be considered; that is the open-memberhip property. For this topology it would mean the ability of potentially anyone to become a hub node if they want. But high requirements can limit this possibility. This is somewhat of a similar problem discussed in chapter one where trying to scale Bitcoin will lead to very high requirements to run a full-node.
-
-\paragraph{}
-The  paper by Prihodko et al.\cite{prihodko2016flare} also covers two other suggestions which are quite similar.
-They where both originally discussed on the lightning network developer mailing list\cite{rusty_routing1} \cite{rusty_routing2} \cite{rusty_routing3}. The concept is that a subset of hubs will be selected at random to become global "beacons". The other nodes find the paths to these, meaning the beacons will act as meeting place between sender and receiver. The receiver will know its paths to the beacons and therefore pick the best one and send it to the sender. Now the sender knows the path from a beacon to the sender and they already know their paths to the beacons. The task of being beacons will be rotated at intervals to make it harder for a single entity to control parts of the network. Becoming a beacon will mean that a lot of traffic will be coming but also earnings from fees will high.
-Prihodko et al.\cite{prihodko2016flare} points out several challenges with this strategy: the requirements for being a beacon is so high that the list of potential beacons would be too small; beacons themselves could be targets of DOS attacks; the channels crated while a node is a beacon will have very limited use afterwards. The other suggested solution is very similar and also uses beacons but these are personal for each node. Nodes will then have find similarities in their beacons to do transactions. A solution where each node can become one of the beacon nodes for other nodes the result will be a more evenly used network where nodes have incentives to stay online and connected.
-
-\paragraph{}
-The degree of decentralization possible in the network has sparked some debate \cite{}
-
-\paragraph{}
-Flare 
-
-
-
-\section{Onion Routing}
-
+%%%%%% NO BLANK PAGES 
+%\let\cleardoublepage\clearpage
 
 \chapter{Spesification and Implementation}
 
@@ -363,6 +336,126 @@ The activation of segwit is important for the Lightning Network. As described ab
 
 SIGHASH NOINPUT \\
 LND \\
+
+
+\chapter{Networking and Routing}
+
+The Lightning Network consists of people having payment channels open to each other, thereby creating a network of channels. The topology of the network will impact other areas such as routing, centralization, optimization, and privacy.  As we have seen in the previous chapters a channel will have a value which is decided in the founding transaction of the channel. This means that  the founds is tied to this channel and cannot be used for something else. The founds will only be available to use for other purposes by closing out the channel. The transfer capacity of a channel will be dependent on the total value of the channel, meaning a channel cannot transfer more than the total value simultaneously. Because of these inconveniences of keeping payment channels available for other people to transfer founds the Lightning network paper\cite{poon2015bitcoin} proposes that one should pay fees to the intermediary nodes for transferring founds. 
+
+\section{Topology}
+The Lightning network paper itself\cite{poon2015bitcoin} imagines that eventually the network will mainly consist of core nodes which maintain open channels with each other, while average users will connect to these when needing to do transfers. This topology is called hub-and-spoke, where the core nodes are the hubs and the spokes are the end users connecting to the hub. These core nodes will have the resources to run channels with high capacity for long periods to other core nodes. The fees end users pay for transferring founds will be the incentive for running these, core nodes effectively providing a payment transferring service to end users. 
+
+\paragraph{}
+A important aspect of the hub-and-spoke topology is the requirements of running a hub.
+This aspect is refered to as t
+Another paper discussing payment channel networks\cite{mccorry2016towards} identifies another aspect of this topology which must be considered; that is the open-memberhip property.
+For this topology it would mean the ability of potentially anyone to become a hub node if they want.
+But high requirements can limit this possibility.
+This is somewhat of a similar problem discussed in chapter one where trying to scale Bitcoin will lead to very high requirements to run a full-node that processes transactions.
+
+
+\paragraph{}
+The degree of decentralization possible in the network has sparked some debate. Some see a hub-and-spoke model as the likely topology \cite{sceptic1}, and some even with a few very central hubs as the only outcome \cite{sceptic2}. One of 
+
+
+\section{Routing}
+\paragraph{} 
+A paper by Prihodko et al. in which a routing algorithm called Flare\cite{prihodko2016flare} is suggested, which will be discussed later does also provide an overview of suggested typologies and routing mechanisms. They state some observations about a hub-and-spoke network with enforced roles, meaning where some nodes can only route payments (the hubs) and others only send or receive payments. This strong separation will mean that the set of hubs will be known and not constantly changing, therefore be finding a route to a specific hub will be fast. They also note some negative aspects with this like 
+end user nodes not having any reason for staying connected to the network, and therefore payments might not reach recipient at once since they will need to connect to the network first.
+It can also cause some high degree of centralization in the network and in addition to contradicting one of the core aspects of Bitcoin it will also decrease the fault tolerance.
+
+\paragraph{}
+The  paper by Prihodko et al.\cite{prihodko2016flare} also covers two other suggestions which are quite similar.
+They where both originally discussed on the lightning network developer mailing list\cite{rusty_routing1} \cite{rusty_routing2} \cite{rusty_routing3}. The concept is that a subset of hubs will be selected at random to become global "beacons". The other nodes find the paths to these, meaning the beacons will act as meeting place between sender and receiver. The receiver will know its paths to the beacons and therefore pick the best one and send it to the sender. Now the sender knows the path from a beacon to the sender and they already know their paths to the beacons. The task of being beacons will be rotated at intervals to make it harder for a single entity to control parts of the network. Becoming a beacon will mean that a lot of traffic will be coming but also earnings from fees will high.
+Prihodko et al.\cite{prihodko2016flare} points out several challenges with this strategy: the requirements for being a beacon is so high that the list of potential beacons would be too small; beacons themselves could be targets of DOS attacks; the channels crated while a node is a beacon will have very limited use afterwards. The other suggested solution is very similar and also uses beacons but these are personal for each node. Nodes will then have find similarities in their beacons to do transactions. A solution where each node can become one of the beacon nodes for other nodes the result will be a more evenly used network where nodes have incentives to stay online and connected.
+
+\paragraph{}
+Flare 
+
+\chapter{Onion Routing}
+
+Onion routing is a mechanism that provides anonymity when messages are routed inside a network. 
+Specifically relationship anonymity which is the concept of unlinkability between the sender and receiver of a message \cite{pfitzmann2001anonymity}. For a message the sender might be known by some, and for others the receiver can be known, but to link the sender and receiver together as having exchnged the message should be impossible. This is a feature that has been suggested for the LN \cite{LNDM_onion}\cite{SB_onion} and also have a implementation under development \cite{LN_onion_implementation}.
+
+\section{Mixing and onions}
+
+Something similar to onion routing, later known as a mix network was proposed by Chaum in 1981 \cite{chaum1981untraceable}.
+The system he suggested provided relationship anonymity and hid the content of the communication. The system consisted of intermediary mix nodes between the sender and receiver which accepted encrypted messages, decrypted them and then forwarded them. Since the messages was encrypted when they arrived and decrypted when they left the mix node it was impossible link the incoming message to a outgoing one for a observer. In addition this done in batches to avoid timing information being used to identify messages. This meant that a observer monitoring the network would not be able to trace a message from its origin to its destination because it was mixed with many other messages.
+
+\paragraph{}
+Onion routing was first proposed by Goldschlag et al. in a paper titled "Hiding Routing Information" \cite{goldschlag1996hiding}.
+The mechanism they suggest is similar to to the one proposed by Chaum \cite{chaum1981untraceable}, but their goal is to construct a more general solution for different communication requirements, and not just a anonymous mail delivery solution as Chaum had done. They wanted a real time, anonymous, and bidirectional socket connection between two parties who wish to communicate. The term "onion routing" refers to the layered construction of the messages used in the solution. In the center of the onion there is the payload of the message, each layer on top of the center is encrypted routing information. When message is sent a path to the sender is selected, and for each intermediary node in the path a layer is constructed telling that particular node where to send the message next. Each layer is encrypted such as the node the layer is intended for can decrypt it. So, this results in each node in path only knowing where they received the onion from, and after they decrypt the top layer, where they should forward the onion to. Relationship anonymity is established since none of the nodes can know both sender and receiver. A node or onion router can also be part several different paths meaning the messages can be somewhat mixed in a similar manner as a mixing network.
+A series of papers refining the idea of onion routing was published after the original one which resulted in the creation of a well known onion routing network Tor \cite{reed1998anonymous}\cite{goldschlag1999onion}\cite{dingledine2004tor}.
+
+\paragraph{}
+According to one of the authors who contributed to all the onion routing papers previously mentioned Paul Syverson the concept of a mix network (mixnet) and onion routing network is often confused \cite{syverson2009m}.
+A big similarity is that both a onion routing network and a decryption mixnet have multiple layers of encryption which is removed as the message is routed through the network.
+But according to Syverson one of the main difference is how they achieve their security which allows for anonymity. 
+A mixnet relies mainly on mixing while a onion routing network will use unpredictable paths. The threat model of the mixnet is that an adversary can observe traffic everywhere in the network and therefore the security must come from heavily mixing the messages. Onion routing that uses unpredictable paths which are difficult for a adversary to observe because the adversary will have limited monitoring capabilities. But if a adversary can observe traffic in both ends of a path in a onion routing network the anonymity provided would be minimal, because the traffic could be recognized. To recognize the traffic several places in a mixnet would in comparison be extremely hard. Again, to reiterate that the intended use for the two methods are also different. Mixnets are generally for unidirectional and high latency traffic, while onion routing is for low latency bidirectional traffic.
+
+
+\section{Sphinx}
+
+Sphinx \cite{danezis2009sphinx} is a packet format originally intended for anonymous messages within a mixnet, but using it for onion routing within the lightning network has been suggested \cite{LNDM_onion} \cite{SB_onion} and also implemented \cite{LN_onion_implementation}.
+Sphinx has bitwise unlinkability which means that the bit pattern of a message entering a node (mix) should not be linkable with the bit pattern of the message when it leaves the mix. It supports paths (routes) lengths of long as the sender wants, meaning there is no limit to how many mix routers a message path can consist of. Also Sphinx has countermeasures to to "tagging attacks", which is when a message is tagged by modifying it and replayed. Finally, it is very compact compared to other cryptographic message formats, and also compared to earlier proposals of formats to use for onion routing in LN \cite{LNDM_onion}.
+
+\paragraph{}
+What allows for such a compact and small message format is how the key distribution are handled. As with other onion routing and mixing solutions, the sender encrypts a message with one layer per node in the path of the message. For the sender to encrypt and the nodes to decrypt, the sender and each node needs to establish a shared key. This is because each node in the path should only be able to decrypt their layer and find out where to send the message to next and nothing more. The shared key between the sender and each node must also be available when the message is created for the user to be able to encrypt the layers.
+Sphinx uses the Diffie Hellman key exchange (DH) \cite{diffie1976new} which allows two parties to establish a common shared key over an unsafe channel. 
+To do this they need a finite cyclic group $G$ of prime order $q$ with a generator $g$. The order $q$ denotes how many elements are contained in $G$ and if $q$ is prime the group is cyclic. The generator $g$ can be used to generate all elements in $G$ as such: every $e\in G$ can be generated by $e=g^i$ with some $i$. All elements created in the key exchange by using $g$ should be in the group $G$ and therefore the $i$ chosen should be $1 \leq i < q$, or in other notation: $i \in _R \mathbb{Z}_q^*$ \cite{algebra}. Here is how Alice and Bob generate a shared secret $S$:
+
+\begin{itemize}
+    \item Alice chooses her secret $a \in _R \mathbb{Z}_q^*$, generates A and sends it to Bob:  $A\in G, A = g^a  $
+    \item Bob chooses his secret $b \in _R \mathbb{Z}_q^*$, generates B and sends to Alice:  $ B\in G, B = g^b$
+    \item Alice calculates shared secret using B from Bob and her secret a: $ S \in G, S = B^a $
+    \item Bob calculates shared secret using A from Alice and his secret b: $ S \in G, S = A^b $
+\end{itemize}
+
+\noindent In Sphinx \cite{danezis2009sphinx} nodes has a private key $x_{n} \in_R \mathbb{Z}_q^*$ which is their secret exponent in DH key exchange. A corresponding public key $y_{n} \in G$ is created using the the generator $g$ of $G$ and the private key like this: $y_{n} = g^x_{n}$. The public key $y_{n}$ is available for everyone and thus the sender can use it to generate the shared secret when creating the message. The sender chooses their secret exponent $x$ and uses the generator to create a element $\alpha$ in the group $G$:
+$\alpha \in G, \alpha = g^x$. Now the sender can use the public key $y_{n}$ of the node with their own secret exponent $x$ and create $s$ the shared key: $s = y_{n}^x$. This shared key is used to encrypt the layer intended for that node. The $\alpha$ element generated by the sender is included in the header of the message without any encryption as it is used by the node to generate the shared secret $s$ by using its private key $x_n$ like so: $s = \alpha^{x_n}$. Now the node can decrypt the rest of the message and forward the message.
+
+\paragraph{}
+Using the method outlined above the sender would need to generate a different $\alpha$ element for each node in the path.
+Each one of those would also need to be included in the message such that every node can calculate their shared key.
+To save space the same $\alpha$ can be used for every node in the path meaning only one $\alpha$ would need to be included in the message. Remember each user will derive the shared key by using their private key $s = \alpha^{x_n}$, meaning the same $\alpha$ value will result in different shared keys $s$ as long as the nodes private key $x_n$ is different. But having the same $\alpha$ value for a message would mean that this message would become linkable with itself. If different values where used for each node this would not be a problem as the value would change for each hop, but having a unencrypted constant value will make the message recognizable. Sphinx solves this by a technique called blinding which mutates the element $\alpha$ for each hop. Each node calculates a blinding factor $b$ using a hash function $h_b$ with their $\alpha$ and shared key $s$ as input, and uses it create the $\alpha$ for the next node. Of course this means that the sender must also calculate the blinding factor when creating the message.
+
+\paragraph{}
+The sender selects a path containing $v$ nodes meaning $ \{\alpha_0, \alpha_1,...,\alpha_{v-1}\} $ group elements, $ \{s_0, s_1,...,s_{v-1}\} $ shared keys, and $ \{b_0, b_1,...,b_{v-1}\} $ blinding factors are be created \cite{danezis2009sphinx}: \\
+$\alpha_0 = g^x, s_0 = y_{n_0}^x, b_0 = h_b(\alpha_0, s_0)$ \\
+$\alpha_1 = g^{xb_0}, s_1 = y_{n_1}^{xb_0}, b_1 = h_b(\alpha_1, s_1)$ \\
+...\\
+$\alpha_{v-1} = g^{xb_0b_1...b_{v-2}}, s_{v-1} = y_{n_{v-1}}^{xb_0b_1...b_{v-2}}, b_{v-1} = h_b(\alpha_{v-1}, s_{v-1})$ \\
+
+\noindent A sphinx message consists of two parts, the header and the payload.
+In the sphinx header $M$ we have two main things the onion encrypted routing information $\beta$, and the MAC $\gamma_i$ for the corresponding $\beta$. When the sender creates the message they create all headers $M$ starting in reverse order $\{M_{v-1}, M_{v-2},...M_0 \}$. Where each $M_i$ contains $\beta_i$ and $\gamma_i$, and each $\beta_i$ contains routing information to node $n_{i+1}$, $\beta_{i+1}$ and $\gamma_{i+1}$. Each $\beta_i$ is encrypted with the shared key $s_i$ such that it can only be decrypted by node $n_i$. This onion structure means that in the center is the destination of the message, while the outermost layer will be intended for the first node in the path. This is why the headers $M_i$ are generated in reverse order.
+
+\paragraph{}
+The group elements $\apha_0$ is included in the header to the first node $n_0$. This node calculates blinding factors to blind $\aplha_0$ to $\alpha_1$ for the next node $n_1$. This blinding of the group element $\alpha_i$ is done by each node using the current alpha value $\alpha_i$, and the shared key $s_i$ like this:\\
+$\alpha_{i+1} = \alpha_i^{h_b(a_i,s_i)}$ \\
+This is the same way the sender calculated the values when the message was created and therefore the $\alpha$ values will be the same for each hop and the same shared keys $s$ can be derived. A complete sphinx message is denoted by $((\alpha, \beta, \gamma)\delta)$, where $\delta$ is the payload. The is also onion encrypted, with one layer being removed at each node. 
+
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=12cm]{figs/sphinx.png}
+    \caption{ How a sphinx message is processed at a node n. Source: \cite{danezis2009sphinx}}
+    \label{fig:sphinx}
+\end{figure}
+
+\noindent
+Here is how a node processes of a sphinx message $((\alpha, \beta, \gamma)\delta)$ as shown in fig.\ref{fig:sphinx}:\\
+The $\alpha$ group element is used to derive a shared key $s$ using the nodes private key $x_n$ like this: $s = \alpha^{x_n}$.
+These two and a hash function $h_b$ are used to blind the group element: $\alpha'= \alpha_i^{h_b(a,s)}$.
+This blinded group element $\alpha'$ is used in the header for the outgoing message to the next node.
+The integrity of the $\beta$ data is verified using the MAC $\gamma$ and the shared key $s$.
+After it has been integrity checked the $\beta$ is decrypted using the shared key $s$ which reveals the routing information to the next node, and also $\beta'$ and $\gamma$ data for the next node. 
+The payload $\delta$ is also decrypted into $\delta'$ using the key $s$, and used in the output message.
+The final output message which is sent to the new node is $((\alpha', \beta', \gamma')\delta')$.
+
+
+\section{Hornet}
+
+
 
 
 
